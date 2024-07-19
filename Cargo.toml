@@ -1,0 +1,38 @@
+[package]
+name = "egui-dataframe"
+version = "0.1.0" # change with html_root_url in lib.rs
+edition = "2021"
+authors = ["nomissbowling <nomissbowling@yahoo.co.jp>"]
+
+description = "Rust egui Widgets for polars dataframe"
+keywords = ["egui", "dataframe", "polars", "plotters", "gui"]
+categories = ["gui", "visualization", "development-tools", "games", "graphics"]
+license = "MIT"
+
+documentation = "https://docs.rs/egui-dataframe/"
+homepage = "https://crates.io/crates/egui-dataframe"
+repository = "https://github.com/nomissbowling/egui-dataframe"
+
+readme = "README.md"
+
+#build = "build.rs"
+
+[lib]
+name = "egui_dataframe"
+
+[dependencies]
+egui-resources = { version = "=0.4.0" }
+
+half = { version = "=2.2.1" } # (for image) 2.4.1
+image = { version = "=0.24.6", features = ["png", "jpeg"] } # 0.25.1
+
+egui = { version = "=0.21.0" } # 0.27.2
+eframe = { version = "=0.21.0", features = ["persistence"] } # 0.27.2
+
+egui_grid = { version = "=0.1.0" } # (egui 0.21.0)
+
+# ecolor = { version = "=0.21.0" } # 0.27.2 (for TableBuilder)
+egui_extras = { version = "=0.21.0" } # 0.27.2 (for TableBuilder GridBuilder)
+
+polars-utils = { version = "=0.25.1" }
+polars = { version = "=0.25.1", features = ["describe", "lazy", "object", "strings", "dtype-full", "dtype-categorical", "list_eval", "rows", "round_series", "rank"] }
