@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/egui-dataframe/0.1.0")]
+#![doc(html_root_url = "https://docs.rs/egui-dataframe/0.1.1")]
 //! egui dataframe
 //!
 
@@ -50,6 +50,7 @@ pub fn named_schema(df: &DataFrame, n: Vec<&str>) -> Schema {
 }
 
 /// Decorator
+#[derive(Debug, Clone)]
 pub struct Decorator {
   /// sz: Vec2
   pub sz: Vec2,
@@ -100,6 +101,7 @@ impl Decorator {
 }
 
 /// DFDesc
+#[derive(Debug, Clone)]
 pub struct DFDesc {
   /// default deco
   pub default_deco: (Decorator, Decorator),
