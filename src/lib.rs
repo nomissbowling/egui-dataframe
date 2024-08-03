@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/egui-dataframe/0.1.1")]
+#![doc(html_root_url = "https://docs.rs/egui-dataframe/0.2.0")]
 //! egui dataframe
 //!
 
@@ -68,6 +68,11 @@ pub struct Decorator {
 
 /// Decorator
 impl Decorator {
+  /// slice Color32 to Vec Option Color32
+  pub fn opt(v: &[Color32]) -> Vec<Option<Color32>> {
+    v.iter().map(|c| Some(*c)).collect::<Vec<_>>()
+  }
+
   /// constructor
   pub fn new(sz: Vec2, sense: Sense, cols: Vec<Option<Color32>>,
     align: Align2, ofs: Vec2, fontid: FontId) -> Self {
@@ -100,9 +105,14 @@ impl Decorator {
   }
 }
 
+/// DFFunc
+pub type DFFunc = fn(&Decorator, &mut Ui, &String, usize, usize) -> bool;
+
 /// DFDesc
-#[derive(Debug, Clone)]
+#[derive(Clone)] // Debug
 pub struct DFDesc {
+  /// fnc
+  pub fnc: (DFFunc, DFFunc),
   /// default deco
   pub default_deco: (Decorator, Decorator),
   /// deco (head, body=column)
@@ -113,10 +123,17 @@ pub struct DFDesc {
 
 /// DFDesc
 impl DFDesc {
+  /// default fnc
+  pub fn default_fnc(d: &Decorator, ui: &mut Ui, tx: &String,
+    _ri: usize, _ci: usize) -> bool {
+    let _resp_painter = d.disp(ui, tx);
+    true
+  }
+
   /// constructor
   pub fn new(default_deco: (Decorator, Decorator), schema: Schema) -> Self {
     let n = schema.len();
-    DFDesc{default_deco,
+    DFDesc{fnc: (DFDesc::default_fnc, DFDesc::default_fnc), default_deco,
       deco: Vec::<(Option<Decorator>, Option<Decorator>)>::with_capacity(n),
       schema}
   }
@@ -153,10 +170,13 @@ impl DFDesc {
       for (i, head) in cols.iter().enumerate() {
         header.col(|ui| {
           let tx = format!("{}", head);
-          let _r_p = (match &self.deco[i] {
-          (None, _) => &self.default_deco.0,
-          (Some(deco_head), _) => deco_head
-          }).disp(ui, &tx);
+          let d = if self.deco.len() == 0 { &self.default_deco.0 } else {
+            match &self.deco[i] {
+            (None, _) => &self.default_deco.0,
+            (Some(deco_head), _) => deco_head
+            }
+          };
+          self.fnc.0(d, ui, &tx, 0, i);
           // ui.label(&tx); // ui.heading(&tx);
         });
       }
@@ -169,10 +189,13 @@ impl DFDesc {
 //              if let Ok(value) = column.get(ri) {
               let value = column.get(ri);
               let tx = format!("{}", value);
-              let _r_p = (match &self.deco[i] {
-              (_, None) => &self.default_deco.1,
-              (_, Some(deco_body)) => deco_body
-              }).disp(ui, &tx);
+              let d = if self.deco.len() == 0 { &self.default_deco.1 } else {
+                match &self.deco[i] {
+                (_, None) => &self.default_deco.1,
+                (_, Some(deco_body)) => deco_body
+                }
+              };
+              self.fnc.1(d, ui, &tx, ri, i);
               // ui.label(&tx);
 //              }
             }
@@ -206,10 +229,13 @@ impl DFDesc {
 //              if let Ok(value) = column.get(j) {
               let value = column.get(j);
               let tx = format!("{}", value);
-              let _r_p = (match &self.deco[i] {
-              (_, None) => &self.default_deco.1,
-              (_, Some(deco_body)) => deco_body
-              }).disp(ui, &tx);
+              let d = if self.deco.len() == 0 { &self.default_deco.1 } else {
+                match &self.deco[i] {
+                (_, None) => &self.default_deco.1,
+                (_, Some(deco_body)) => deco_body
+                }
+              };
+              self.fnc.1(d, ui, &tx, j, i);
               // ui.label(&tx);
 //              }
             }
