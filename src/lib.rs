@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/egui-dataframe/0.2.0")]
+#![doc(html_root_url = "https://docs.rs/egui-dataframe/0.3.0")]
 //! egui dataframe
 //!
 
@@ -105,14 +105,29 @@ impl Decorator {
   }
 }
 
-/// DFFunc
-pub type DFFunc = fn(&Decorator, &mut Ui, &String, usize, usize) -> bool;
+/// DecoFunc
+pub type DecoFunc<'a> = &'a mut dyn FnMut(&Decorator, &mut Ui, &str,
+  usize, usize) -> bool;
+
+/// DecoFs
+pub struct DecoFs<'a> {
+  /// fncs
+  pub fncs: (DecoFunc<'a>, DecoFunc<'a>)
+}
+
+/// DecoFs
+impl<'a> DecoFs<'a> {
+  /// default
+  pub fn default(d: &Decorator, ui: &mut Ui, tx: &str,
+    _ri: usize, _ci: usize) -> bool {
+    let _resp_painter = d.disp(ui, tx);
+    true
+  }
+}
 
 /// DFDesc
-#[derive(Clone)] // Debug
+#[derive(Debug, Clone)]
 pub struct DFDesc {
-  /// fnc
-  pub fnc: (DFFunc, DFFunc),
   /// default deco
   pub default_deco: (Decorator, Decorator),
   /// deco (head, body=column)
@@ -123,17 +138,10 @@ pub struct DFDesc {
 
 /// DFDesc
 impl DFDesc {
-  /// default fnc
-  pub fn default_fnc(d: &Decorator, ui: &mut Ui, tx: &String,
-    _ri: usize, _ci: usize) -> bool {
-    let _resp_painter = d.disp(ui, tx);
-    true
-  }
-
   /// constructor
   pub fn new(default_deco: (Decorator, Decorator), schema: Schema) -> Self {
     let n = schema.len();
-    DFDesc{fnc: (DFDesc::default_fnc, DFDesc::default_fnc), default_deco,
+    DFDesc{default_deco,
       deco: Vec::<(Option<Decorator>, Option<Decorator>)>::with_capacity(n),
       schema}
   }
@@ -157,7 +165,7 @@ impl DFDesc {
   }
 
   /// display dataframe to ui (TableBuilder)
-  pub fn disp<'a>(&'a self, ui: &'a mut Ui, df: &DataFrame,
+  pub fn disp<'a>(&'a self, ui: &'a mut Ui, f: &mut DecoFs, df: &DataFrame,
     height_head: f32, height_body: f32, resizable: bool, striped: bool,
     vscroll: bool) {
     let (nrows, ncols) = (df.height(), df.width());
@@ -176,7 +184,7 @@ impl DFDesc {
             (Some(deco_head), _) => deco_head
             }
           };
-          self.fnc.0(d, ui, &tx, 0, i);
+          f.fncs.0(d, ui, &tx, 0, i);
           // ui.label(&tx); // ui.heading(&tx);
         });
       }
@@ -195,7 +203,7 @@ impl DFDesc {
                 (_, Some(deco_body)) => deco_body
                 }
               };
-              self.fnc.1(d, ui, &tx, ri, i);
+              f.fncs.1(d, ui, &tx, ri, i);
               // ui.label(&tx);
 //              }
             }
@@ -207,7 +215,7 @@ impl DFDesc {
 
   /// display grid to ui (GridBuilder)
   /// - ma: &amp;style::Margin::[same(f32) or symmetric(f32, f32)]
-  pub fn grid<'a>(&'a self, ui: &'a mut Ui, df: &DataFrame,
+  pub fn grid<'a>(&'a self, ui: &'a mut Ui, f: &mut DecoFs, df: &DataFrame,
     width: f32, height: f32, ts: &TextStyle,
     sp: &(f32, f32), ma: &style::Margin) {
     let (nrows, ncols) = (df.height(), df.width());
@@ -235,7 +243,7 @@ impl DFDesc {
                 (_, Some(deco_body)) => deco_body
                 }
               };
-              self.fnc.1(d, ui, &tx, j, i);
+              f.fncs.1(d, ui, &tx, j, i);
               // ui.label(&tx);
 //              }
             }
