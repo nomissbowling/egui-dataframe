@@ -1,8 +1,8 @@
-#![doc(html_root_url = "https://docs.rs/egui-dataframe/0.3.0")]
+#![doc(html_root_url = "https://docs.rs/egui-dataframe/0.3.1")]
 //! egui dataframe
 //!
 
-// use std::error::Error;
+use std::error::Error;
 use eframe::{self, egui::*};
 use egui_grid::GridBuilder;
 use egui_extras::{Size, TableBuilder, Column};
@@ -47,6 +47,15 @@ pub fn named_fields(df: &DataFrame, n: Vec<&str>) -> Vec<Field> {
 /// - otherwise df.schema() returns names as column_0, column_1, ...
 pub fn named_schema(df: &DataFrame, n: Vec<&str>) -> Schema {
   Schema::from_iter(named_fields(&df, n))
+}
+
+/// DataFrame from Vec&lt;polars::frame::row::Row&gt; and field names
+pub fn df_from_vec(rows: &Vec<polars::frame::row::Row>, n: &Vec<&str>) ->
+  Result<DataFrame, Box<dyn Error>> {
+  let schema = Schema::from(&rows[0]);
+  let mut df = DataFrame::from_rows_iter_and_schema(rows.iter(), &schema)?;
+  df.set_column_names(&n)?;
+  Ok(df)
 }
 
 /// Decorator
